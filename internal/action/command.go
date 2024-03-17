@@ -40,6 +40,7 @@ func InitCommands() {
 		"bind":       {(*BufPane).BindCmd, nil},
 		"unbind":     {(*BufPane).UnbindCmd, nil},
 		"quit":       {(*BufPane).QuitCmd, nil},
+		"quitall":    {(*BufPane).QuitAllCmd, nil},
 		"goto":       {(*BufPane).GotoCmd, nil},
 		"save":       {(*BufPane).SaveCmd, nil},
 		"replace":    {(*BufPane).ReplaceCmd, nil},
@@ -702,9 +703,14 @@ func (h *BufPane) RunCmd(args []string) {
 	}
 }
 
-// QuitCmd closes the main view
+// QuitCmd closes the current view
 func (h *BufPane) QuitCmd(args []string) {
 	h.Quit()
+}
+
+// QuitAllCmd closes every view
+func (h *BufPane) QuitAllCmd(args []string) {
+	h.QuitAll()
 }
 
 // GotoCmd is a command that will send the cursor to a certain

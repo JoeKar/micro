@@ -29,7 +29,9 @@ quotes here but these are not necessary when entering the command in micro.
 * `save ['filename']`: saves the current buffer. If the file is provided it
    will 'save as' the filename.
 
-* `quit`: quits micro.
+* `quit`: tries to close the current buffer respective view in micro.
+
+* `quitall`: tries to close every buffer respective view in micro.
 
 * `goto 'line'`: jumps to the given line number. A negative number can be
    passed to jump inward from the end of the file; for example, -5 jumps

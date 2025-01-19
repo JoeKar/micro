@@ -219,12 +219,6 @@ func (b *Buffer) saveToFile(filename string, withSudo bool, autoSave bool) error
 		}
 	}
 
-	// Update the last time this file was updated after saving
-	defer func() {
-		b.ModTime, _ = util.GetModTime(filename)
-		err = b.Serialize()
-	}()
-
 	filename, err = util.ReplaceHome(filename)
 	if err != nil {
 		return err
@@ -283,8 +277,11 @@ func (b *Buffer) saveToFile(filename string, withSudo bool, autoSave bool) error
 
 	b.Path = filename
 	b.AbsPath = absFilename
+	b.ModTime, _ = util.GetModTime(b.Path)
 	b.isModified = false
 	b.ReloadSettings(true)
+
+	err = b.Serialize()
 	return err
 }
 

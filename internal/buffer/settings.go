@@ -11,6 +11,7 @@ import (
 )
 
 func (b *Buffer) ReloadSettings(reloadFiletype bool) {
+	oldFiletype := b.Settings["filetype"]
 	settings := config.ParsedSettings()
 	config.UpdatePathGlobLocals(settings, b.AbsPath)
 
@@ -27,7 +28,13 @@ func (b *Buffer) ReloadSettings(reloadFiletype bool) {
 	// update syntax rules, which will also update filetype if needed
 	b.UpdateRules()
 
-	config.UpdateFileTypeLocals(settings, b.Settings["filetype"].(string))
+	curFiletype := b.Settings["filetype"]
+	if oldFiletype != curFiletype {
+		b.doCallbacks("filetype", oldFiletype, curFiletype)
+	}
+
+	config.UpdateFileTypeLocals(settings, curFiletype.(string))
+
 	for k, v := range config.DefaultCommonSettings() {
 		if k == "filetype" {
 			// prevent recursion
@@ -119,15 +126,7 @@ func (b *Buffer) DoSetOptionNative(option string, nativeValue interface{}) {
 		}
 	}
 
-	if b.OptionCallback != nil {
-		b.OptionCallback(option, nativeValue)
-	}
-
-	if err := config.RunPluginFn("onBufferOptionChanged",
-		luar.New(ulua.L, b), luar.New(ulua.L, option),
-		luar.New(ulua.L, oldValue), luar.New(ulua.L, nativeValue)); err != nil {
-		screen.TermMessage(err)
-	}
+	b.doCallbacks(option, oldValue, nativeValue)
 }
 
 func (b *Buffer) SetOptionNative(option string, nativeValue interface{}) error {
@@ -153,4 +152,16 @@ func (b *Buffer) SetOption(option, value string) error {
 	}
 
 	return b.SetOptionNative(option, nativeValue)
+}
+
+func (b *Buffer) doCallbacks(option string, oldValue interface{}, newValue interface{}) {
+	if b.OptionCallback != nil {
+		b.OptionCallback(option, newValue)
+	}
+
+	if err := config.RunPluginFn("onBufferOptionChanged",
+		luar.New(ulua.L, b), luar.New(ulua.L, option),
+		luar.New(ulua.L, oldValue), luar.New(ulua.L, newValue)); err != nil {
+		screen.TermMessage(err)
+	}
 }

@@ -18,6 +18,8 @@ func (b *Buffer) ReloadSettings(reloadFiletype bool) {
 	if reloadFiletype && !local && !volatile {
 		// need to update filetype before updating other settings based on it
 		b.Settings["filetype"] = "unknown"
+		settings["filetype"] = "unknown"
+		config.InitLocalSettings(settings, b.Path)
 		if v, ok := settings["filetype"]; ok {
 			b.Settings["filetype"] = v
 		}

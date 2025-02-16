@@ -295,7 +295,11 @@ func InitLocalSettings(settings map[string]interface{}, path string) {
 	for k, v := range parsedSettings {
 		if strings.HasPrefix(reflect.TypeOf(v).String(), "map") {
 			if strings.HasPrefix(k, "ft:") {
-				if settings["filetype"].(string) == k[3:] {
+				filetype, ok := settings["filetype"]
+				if !ok {
+					continue
+				}
+				if filetype.(string) == k[3:] {
 					for k1, v1 := range v.(map[string]interface{}) {
 						settings[k1] = v1
 					}

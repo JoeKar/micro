@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/zyedidia/micro/v2/internal/util"
+	"github.com/micro-editor/micro/v2/internal/util"
 )
 
 // A State represents the region at the end of a line

@@ -192,7 +192,7 @@ func ParseFile(input []byte) (f *File, err error) {
 			var ok bool
 			err, ok = r.(error)
 			if !ok {
-				err = fmt.Errorf("pkg: %v", r)
+				err = fmt.Errorf("Recovered: %v", r)
 			}
 		}
 	}()
@@ -233,7 +233,7 @@ func ParseDef(f *File, header *Header) (s *Def, err error) {
 			var ok bool
 			err, ok = r.(error)
 			if !ok {
-				err = fmt.Errorf("pkg: %v", r)
+				err = fmt.Errorf("Recovered: %v", r)
 			}
 		}
 	}()
@@ -342,7 +342,7 @@ func parseRules(input []any, curRegion *region) (ru *rules, err error) {
 			var ok bool
 			err, ok = r.(error)
 			if !ok {
-				err = fmt.Errorf("pkg: %v", r)
+				err = fmt.Errorf("Recovered: %v", r)
 			}
 		}
 	}()
@@ -398,7 +398,7 @@ func parseRegion(group string, regionInfo map[any]any, prevRegion *region) (r *r
 			var ok bool
 			err, ok = r.(error)
 			if !ok {
-				err = fmt.Errorf("pkg: %v", r)
+				err = fmt.Errorf("Recovered: %v", r)
 			}
 		}
 	}()

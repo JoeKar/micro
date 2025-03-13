@@ -7,8 +7,8 @@ import (
 
 	"github.com/micro-editor/micro/v2/internal/buffer"
 	"github.com/micro-editor/micro/v2/internal/config"
+	"github.com/micro-editor/micro/v2/internal/highlight"
 	"github.com/micro-editor/micro/v2/internal/util"
-	"github.com/micro-editor/micro/v2/pkg/highlight"
 )
 
 // This file is meant (for now) for autocompletion in command mode, not

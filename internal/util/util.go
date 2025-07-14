@@ -3,6 +3,7 @@ package util
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"io"
@@ -450,6 +451,10 @@ func AppendBackupSuffix(path string) string {
 	return path + ".micro-backup"
 }
 
+func HashStringMd5(str string) string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(str)))
+}
+
 // EscapePathUrl encodes the path in URL query form
 func EscapePathUrl(path string) string {
 	return url.QueryEscape(filepath.ToSlash(path))
@@ -469,18 +474,30 @@ func EscapePathLegacy(path string) string {
 // using URL encoding (preferred, since it encodes unambiguously) or
 // legacy encoding with '%' (for backward compatibility, if the legacy-escaped
 // path exists in the given directory).
-func DetermineEscapePath(dir string, path string) string {
-	url := filepath.Join(dir, EscapePathUrl(path))
-	if _, err := os.Stat(url); err == nil {
-		return url
+// In case the escaped path, including the backup extension, exceeds the
+// filename length limit it is hashed and the hash is used as final filename.
+// A second filename is provided to optionally fill this file with the original
+// path to resolve the hashed filename.
+func DetermineEscapePath(dir string, path string) (string, string) {
+	fresolve := ""
+	fname := EscapePathUrl(path)
+	length := len(fname)
+	if length+len(".micro-backup") > 255 {
+		fname = HashStringMd5(path)
+		fresolve = filepath.Join(dir, fname+".path")
+	}
+
+	fpath := filepath.Join(dir, fname)
+	if _, err := os.Stat(fpath); err == nil {
+		return fpath, fresolve
 	}
 
 	legacy := filepath.Join(dir, EscapePathLegacy(path))
 	if _, err := os.Stat(legacy); err == nil {
-		return legacy
+		return legacy, fresolve
 	}
 
-	return url
+	return fpath, fresolve
 }
 
 // GetLeadingWhitespace returns the leading whitespace of the given byte array

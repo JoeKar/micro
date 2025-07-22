@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"sync/atomic"
 	"time"
 	"unicode"
@@ -26,6 +27,7 @@ import (
 const LargeFileThreshold = 50000
 
 type wrappedFile struct {
+	name        string
 	writeCloser io.WriteCloser
 	withSudo    bool
 	screenb     bool
@@ -83,7 +85,7 @@ func openFile(name string, withSudo bool) (wrappedFile, error) {
 	var sigChan chan os.Signal
 
 	if withSudo {
-		cmd = exec.Command(config.GlobalSettings["sucmd"].(string), "dd", "bs=4k", "of="+name)
+		cmd = exec.Command(config.GlobalSettings["sucmd"].(string), "dd", "bs=4k", "conv=notrunc,fsync", "of="+name)
 		writeCloser, err = cmd.StdinPipe()
 		if err != nil {
 			return wrappedFile{}, err
@@ -113,7 +115,17 @@ func openFile(name string, withSudo bool) (wrappedFile, error) {
 		}
 	}
 
-	return wrappedFile{writeCloser, withSudo, screenb, cmd, sigChan}, nil
+	return wrappedFile{name, writeCloser, withSudo, screenb, cmd, sigChan}, nil
+}
+
+func (wf wrappedFile) Truncate(size int64) error {
+	if wf.withSudo {
+		// we don't need to stop the screen here, since it is still stopped
+		// by openFile()
+		cmd := exec.Command(config.GlobalSettings["sucmd"].(string), "truncate", "-s", strconv.FormatInt(size, 10), wf.name)
+		return cmd.Run()
+	}
+	return wf.writeCloser.(*os.File).Truncate(size)
 }
 
 func (wf wrappedFile) Write(b *Buffer) (int, error) {
@@ -134,12 +146,9 @@ func (wf wrappedFile) Write(b *Buffer) (int, error) {
 		eol = []byte{'\n'}
 	}
 
-	if !wf.withSudo {
-		f := wf.writeCloser.(*os.File)
-		err := f.Truncate(0)
-		if err != nil {
-			return 0, err
-		}
+	err := wf.Truncate(0)
+	if err != nil {
+		return 0, err
 	}
 
 	// write lines

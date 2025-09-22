@@ -39,8 +39,20 @@ func (b *Buffer) Serialize() error {
 		return err
 	}
 
-	name, _ := util.DetermineEscapePath(filepath.Join(config.ConfigDir, "buffers"), b.AbsPath)
-	return util.SafeWrite(name, buf.Bytes(), true)
+	name, resolveName := util.DetermineEscapePath(filepath.Join(config.ConfigDir, "buffers"), b.AbsPath)
+	err = util.SafeWrite(name, buf.Bytes(), true)
+	if err != nil {
+		return err
+	}
+
+	if resolveName != "" {
+		err = util.SafeWrite(resolveName, []byte(b.AbsPath), true)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Unserialize loads the buffer info from config.ConfigDir/buffers

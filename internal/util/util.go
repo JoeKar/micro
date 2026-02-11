@@ -489,6 +489,27 @@ func DetermineEscapePath(dir string, path string) (string, string) {
 	return url, ""
 }
 
+// ResolveSymlinks provides the resolved path relative to the current directory
+// and the absolute resolved path
+func ResolveSymlinks(path string) (string, string) {
+	resolvedPath, err := filepath.EvalSymlinks(path)
+	if err == nil {
+		path = resolvedPath
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		absPath = path
+	}
+
+	resolvedPath, err = filepath.EvalSymlinks(absPath)
+	if err == nil {
+		absPath = resolvedPath
+	}
+
+	return path, absPath
+}
+
 // GetLeadingWhitespace returns the leading whitespace of the given byte array
 func GetLeadingWhitespace(b []byte) []byte {
 	ws := []byte{}

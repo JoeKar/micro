@@ -248,7 +248,7 @@ regionLoop:
 					}
 				}
 			}
-			if lenStartMatches > lenEndMatches || (samePattern && lenStartMatches == lenEndMatches) {
+			if lenEndMatches == 0 || (samePattern && (lenStartMatches%2 > 0)) {
 				// start at the current line
 				c := b.process(&branch{start + startMatch[0], start + lineLen, false, false, r.group, r, r.rules, b, []*branch{}, []*branch{}})
 				if c != nil {
@@ -260,7 +260,7 @@ regionLoop:
 				continue regionLoop
 			}
 		}
-		if curRegion == r && (lenStartMatches == 0 || (samePattern && lenStartMatches == lenEndMatches)) {
+		if curRegion == r && (lenStartMatches == 0 || (samePattern && (lenStartMatches%2 > 0))) {
 			for _, endMatch := range endMatches {
 				// end at the current line
 				c := b.process(&branch{start, start + endMatch[1], false, true, r.group, r, r.rules, b, []*branch{}, []*branch{}})

@@ -27,7 +27,7 @@ type branch struct {
 	start    int
 	end      int
 	pattern  bool
-	closed   bool
+	open     bool
 	group    Group
 	region   *region
 	rules    *rules
@@ -206,10 +206,10 @@ regionLoop:
 					if samePattern {
 						startIdx += 1
 					}
-					container := &branch{start + startMatch[0], start + endMatch[1], false, true, r.group, r, r.rules, b, []*branch{}, []*branch{}}
-					container.process(&branch{start + startMatch[0], start + startMatch[1], false, true, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
-					mid := container.process(&branch{start + startMatch[1], start + endMatch[0], false, true, r.group, r, r.rules, container, []*branch{}, []*branch{}})
-					container.process(&branch{start + endMatch[0], start + endMatch[1], false, true, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
+					container := &branch{start + startMatch[0], start + endMatch[1], false, false, r.group, r, r.rules, b, []*branch{}, []*branch{}}
+					container.process(&branch{start + startMatch[0], start + startMatch[1], false, false, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
+					mid := container.process(&branch{start + startMatch[1], start + endMatch[0], false, false, r.group, r, r.rules, container, []*branch{}, []*branch{}})
+					container.process(&branch{start + endMatch[0], start + endMatch[1], false, false, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
 					h.highlightRegions(start+startMatch[1], util.SliceStartEnd(line, startMatch[1], endMatch[0]), nil, mid)
 					result := b.process(container)
 					if result == nil {
@@ -220,9 +220,9 @@ regionLoop:
 					if curRegion == r {
 						// end at the current line and next start found
 						// log.Println("... end")
-						container := &branch{start, start + endMatch[1], false, true, r.group, r, r.rules, b, []*branch{}, []*branch{}}
-						mid := container.process(&branch{start, start + endMatch[0], false, true, r.group, r, r.rules, container, []*branch{}, []*branch{}})
-						container.process(&branch{start + endMatch[0], start + endMatch[1], false, true, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
+						container := &branch{start, start + endMatch[1], false, false, r.group, r, r.rules, b, []*branch{}, []*branch{}}
+						mid := container.process(&branch{start, start + endMatch[0], false, false, r.group, r, r.rules, container, []*branch{}, []*branch{}})
+						container.process(&branch{start + endMatch[0], start + endMatch[1], false, false, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
 						h.highlightRegions(start, util.SliceStart(line, endMatch[0]), nil, mid)
 						result := b.process(container)
 						if result != nil {
@@ -243,9 +243,9 @@ regionLoop:
 					} else if endIdx == lenEndMatches-1 {
 						// start at the current line
 						// log.Println("start ...")
-						container := &branch{start + startMatch[0], start + lineLen, false, false, r.group, r, r.rules, b, []*branch{}, []*branch{}}
-						container.process(&branch{start + startMatch[0], start + startMatch[1], false, false, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
-						mid := container.process(&branch{start + startMatch[1], start + lineLen, false, false, r.group, r, r.rules, container, []*branch{}, []*branch{}})
+						container := &branch{start + startMatch[0], start + lineLen, false, true, r.group, r, r.rules, b, []*branch{}, []*branch{}}
+						container.process(&branch{start + startMatch[0], start + startMatch[1], false, true, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
+						mid := container.process(&branch{start + startMatch[1], start + lineLen, false, true, r.group, r, r.rules, container, []*branch{}, []*branch{}})
 						h.highlightRegions(start+startMatch[1], util.SliceEnd(line, startMatch[1]), nil, mid)
 						result := b.process(container)
 						if result == nil {
@@ -258,9 +258,9 @@ regionLoop:
 			if lenEndMatches == 0 || (samePattern && (lenStartMatches%2 > 0)) {
 				// start at the current line
 				// log.Println("start ...")
-				container := &branch{start + startMatch[0], start + lineLen, false, false, r.group, r, r.rules, b, []*branch{}, []*branch{}}
-				container.process(&branch{start + startMatch[0], start + startMatch[1], false, false, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
-				mid := container.process(&branch{start + startMatch[1], start + lineLen, false, false, r.group, r, r.rules, container, []*branch{}, []*branch{}})
+				container := &branch{start + startMatch[0], start + lineLen, false, true, r.group, r, r.rules, b, []*branch{}, []*branch{}}
+				container.process(&branch{start + startMatch[0], start + startMatch[1], false, true, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
+				mid := container.process(&branch{start + startMatch[1], start + lineLen, false, true, r.group, r, r.rules, container, []*branch{}, []*branch{}})
 				h.highlightRegions(start+startMatch[1], util.SliceEnd(line, startMatch[1]), nil, mid)
 				result := b.process(container)
 				if result == nil {
@@ -273,9 +273,9 @@ regionLoop:
 			for _, endMatch := range endMatches {
 				// end at the current line
 				// log.Println("... end")
-				container := &branch{start, start + endMatch[1], false, true, r.group, r, r.rules, b, []*branch{}, []*branch{}}
-				mid := container.process(&branch{start, start + endMatch[0], false, true, r.group, r, r.rules, container, []*branch{}, []*branch{}})
-				container.process(&branch{start + endMatch[0], start + endMatch[1], false, true, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
+				container := &branch{start, start + endMatch[1], false, false, r.group, r, r.rules, b, []*branch{}, []*branch{}}
+				mid := container.process(&branch{start, start + endMatch[0], false, false, r.group, r, r.rules, container, []*branch{}, []*branch{}})
+				container.process(&branch{start + endMatch[0], start + endMatch[1], false, false, r.limitGroup, nil, nil, container, []*branch{}, []*branch{}})
 				h.highlightRegions(start, util.SliceStart(line, endMatch[0]), nil, mid)
 				result := b.process(container)
 				if result != nil {
@@ -298,7 +298,7 @@ regionLoop:
 	}
 	if curRegion != nil {
 		// current region still open
-		result := b.process(&branch{start, lineLen, false, false, curRegion.group, curRegion, curRegion.rules, b, []*branch{}, []*branch{}})
+		result := b.process(&branch{start, lineLen, false, true, curRegion.group, curRegion, curRegion.rules, b, []*branch{}, []*branch{}})
 		if result != nil {
 			// log.Println("...")
 			h.highlightRegions(start, line, nil, result)
@@ -310,10 +310,10 @@ regionLoop:
 
 func (b *branch) parentsOpen() bool {
 	if b.parent != nil {
-		if b.parent.closed {
-			return false
+		if b.parent.open {
+			return b.parent.parentsOpen()
 		}
-		return b.parent.parentsOpen()
+		return false
 	}
 	return true
 }
@@ -324,7 +324,7 @@ func (h *Highlighter) flatten(branches []*branch) *region {
 		for i := branch.start; i < branch.end; i++ {
 			h.fullHighlights[i] = branch.group
 		}
-		if !branch.closed && branch.parentsOpen() {
+		if branch.open && branch.parentsOpen() {
 			lastOpen = branch.region
 		}
 		tmpLastOpen := h.flatten(branch.branches)
@@ -343,6 +343,7 @@ func (h *Highlighter) highlight(highlights LineMatch, start int, lineNum int, li
 	}
 
 	h.root = branch{}
+	h.root.open = true
 	if curRegion != nil && curRegion.parent != nil {
 		h.root.rules = curRegion.parent.rules
 	} else {

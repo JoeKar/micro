@@ -298,10 +298,22 @@ regionLoop:
 	}
 	if curRegion != nil {
 		// current region still open
-		result := b.process(&branch{start, lineLen, false, true, curRegion.group, curRegion, curRegion.rules, b, []*branch{}, []*branch{}})
-		if result != nil {
+		if curRegion.parent != nil {
+			// The region has a parent -> check if it closes first.
+			// This prevents false positive nested open regions spanning over their parent.
+			b.rules = curRegion.parent.rules
+			region := h.highlightRegions(start, line, curRegion.parent, b)
+			if region == nil {
+				curRegion = nil
+			}
+		} else {
 			// log.Println("...")
-			h.highlightRegions(start, line, nil, result)
+			container := &branch{start, lineLen, false, true, curRegion.group, curRegion, curRegion.rules, b, []*branch{}, []*branch{}}
+			h.highlightRegions(start, line, nil, container)
+			result := b.process(container)
+			if result == nil {
+				b.stash = append(b.stash, container)
+			}
 		}
 	}
 
